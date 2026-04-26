@@ -1,1 +1,200 @@
 
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搵樓！搵我O.K.LAW！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* 深色模式全局背景 */
+        body { background-color: #0f172a; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px 12px 0 0; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body class="text-slate-200">
+
+<div id="app" class="pb-24">
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 p-4 shadow-xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="font-black text-2xl bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">搵樓！搵我O.K.LAW！</div>
+            <div class="text-xs font-bold border border-blue-500/50 text-blue-400 px-3 py-1 rounded-full uppercase tracking-widest">📞54093210</div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 min-h-screen">
+        
+        <div class="bg-slate-800/50 rounded-2xl p-6 mb-8 border border-slate-700 shadow-2xl">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <h2 class="font-bold text-xl text-white flex items-center">
+                    <span class="mr-2">🎯 精確搵樓</span>
+                </h2>
+                
+                <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-700">
+                    <button @click="matchMode = 'OR'" 
+                        :class="matchMode === 'OR' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all">部分符合</button>
+                    <button @click="matchMode = 'AND'" 
+                        :class="matchMode === 'AND' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400'"
+                        class="px-4 py-2 rounded-lg text-sm font-bold transition-all">同時符合</button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button @click="selectedTags = []" class="px-4 py-2 rounded-lg text-sm border border-slate-600 text-slate-400 hover:bg-slate-700 transition">清空</button>
+                <button v-for="tag in allTags" :key="tag"
+                    @click="toggleTag(tag)"
+                    :class="selectedTags.includes(tag) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'"
+                    class="px-4 py-2 rounded-lg text-sm border font-medium transition-all shadow-md">
+                    {{ tag }}
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div v-for="video in displayedVideos" :key="video.id" 
+                 class="bg-slate-800 rounded-2xl overflow-hidden border border-slate-700 hover:border-blue-500/50 transition-all shadow-lg group">
+                
+                <div class="video-container" v-html="video.embedCode"></div>
+                
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">{{ video.title }}</h3>
+                        <span class="text-[10px] text-slate-500 font-mono">ID: {{ video.id }}</span>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span v-for="t in video.tags" class="text-[10px] font-bold bg-slate-900 text-slate-400 px-2 py-1 rounded">#{{ t }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <button @click="shareWhatsApp(video)" class="flex items-center justify-center gap-2 bg-[#25D366] text-white py-2 rounded-xl text-sm font-bold hover:opacity-90">
+                            WhatsApp 轉發
+                        </button>
+                        <button @click="shareWeChat(video)" class="flex items-center justify-center gap-2 bg-[#07C160] text-white py-2 rounded-xl text-sm font-bold hover:opacity-90">
+                            微信 轉發
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="hasMore" class="mt-12 text-center">
+            <button @click="loadMore" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-12 py-4 rounded-full font-bold text-blue-400 transition-all shadow-xl">
+                顯示更多影片 (還有 {{ remainingCount }} 條)
+            </button>
+        </div>
+
+        <div v-if="filteredVideos.length === 0" class="py-20 text-center text-slate-500">
+            <p class="text-4xl mb-4">🏠</p>
+            <p>暫時沒有符合標籤的盤源</p>
+        </div>
+
+        <section class="mt-20 bg-gradient-to-br from-blue-900 to-indigo-950 rounded-3xl p-10 text-center border border-blue-800/50 shadow-2xl">
+            <h2 class="text-3xl font-black text-white mb-6">搵樓Call我</h2>
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <a href="tel:+85254093210" class="bg-white text-blue-900 px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2">📞 5409 3210</a>
+                <a href="https://wa.me/85298765432" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2">💬 WhatsApp</a>
+            </div>
+            <p class="mt-6 text-blue-300/60 text-sm">微信號：YourAgentID</p>
+        </section>
+    </main>
+</div>
+
+<script>
+    const { createApp, ref, computed, watch } = Vue;
+
+    createApp({
+        setup() {
+            const selectedTags = ref([]);
+            const matchMode = ref('OR');
+            const pageSize = 5;
+            const currentPage = ref(1);
+
+            // 影片數據庫 (請確保 ID 是數字)
+            const videos = ref([
+                { id: 1, title: '最新：西九龍四房豪宅', tags: ['豪宅', '西九龍', '四房'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' },
+                { id: 2, title: '屯門兩房 - 罕有放盤', tags: ['上車盤', '屯門', '兩房'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' },
+                { id: 3, title: '啟德新區 - 投資必選', tags: ['投資', '啟德'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' },
+                { id: 4, title: '元朗大屋苑 - 園景三房', tags: ['元朗', '三房'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' },
+                { id: 5, title: '將軍澳地鐵沿線', tags: ['將軍澳', '兩房'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' },
+                { id: 6, title: '大埔村屋高層', tags: ['村屋', '大埔'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' },
+                { id: 7, title: '沙田複式戶', tags: ['豪宅', '特色戶'], videoUrl: 'https://youtu.be/dQw4w9WgXcQ', embedCode: '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>' }, 
+            ]);
+
+            // 1. 篩選與排序邏輯 (ID 最大優先)
+            const filteredVideos = computed(() => {
+                let result = [...videos.value];
+                
+                // 標籤篩選
+                if (selectedTags.value.length > 0) {
+                    result = result.filter(v => {
+                        return matchMode.value === 'AND' 
+                            ? selectedTags.value.every(t => v.tags.includes(t))
+                            : selectedTags.value.some(t => v.tags.includes(t));
+                    });
+                }
+
+                // ID 排序 (大的在前)
+                return result.sort((a, b) => b.id - a.id);
+            });
+
+            // 2. 分頁顯示邏輯 (每頁 5 條)
+            const displayedVideos = computed(() => {
+                return filteredVideos.value.slice(0, currentPage.value * pageSize);
+            });
+
+            const hasMore = computed(() => {
+                return displayedVideos.value.length < filteredVideos.value.length;
+            });
+
+            const remainingCount = computed(() => {
+                return filteredVideos.value.length - displayedVideos.value.length;
+            });
+
+            const loadMore = () => { currentPage.value++; };
+
+            // 重置分頁 (當篩選條件改變時)
+            watch([selectedTags, matchMode], () => { currentPage.value = 1; }, { deep: true });
+
+            const allTags = computed(() => {
+                const s = new Set();
+                videos.value.forEach(v => v.tags.forEach(t => s.add(t)));
+                return Array.from(s).sort();
+            });
+
+            const toggleTag = (tag) => {
+                const i = selectedTags.value.indexOf(tag);
+                if (i > -1) selectedTags.value.splice(i, 1);
+                else selectedTags.value.push(tag);
+            };
+
+            // 4. 分享功能 (Requirement 4)
+            const shareWhatsApp = (video) => {
+                const text = encodeURIComponent(`搵樓！搵我O.K.LAW！幫到手！\n電話:54093210\n\n影片：${video.title}\n連結：${video.videoUrl}`);
+                window.open(`https://wa.me/?text=${text}`, '_blank');
+            };
+
+            const shareWeChat = (video) => {
+                // 微信靜態網頁無法直接喚起分享，通常是提示用戶複製連結
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = `搵樓！我O.K.LAW 幫到手!\n電話:+852 54093210\n\n影片：${video.title} - ${video.videoUrl}`;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                alert('已複製推薦語及連結，請貼上至微信分享給好友！');
+            };
+
+            return { 
+                selectedTags, allTags, toggleTag, matchMode, 
+                displayedVideos, filteredVideos, hasMore, loadMore, remainingCount,
+                shareWhatsApp, shareWeChat
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
