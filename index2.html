@@ -101,6 +101,20 @@
         <div v-if="hasMore" class="mt-12 text-center">
             <button @click="loadMore" class="bg-slate-800 border border-slate-600 px-12 py-4 rounded-full font-bold text-blue-400">顯示更多 (還有 {{ remainingCount }} 條)</button>
         </div>
+
+         <div v-if="filteredVideos.length === 0" class="py-20 text-center text-slate-500">
+            <p class="text-4xl mb-4">🏠</p>
+            <p>暫時沒有符合標籤的盤源</p>
+        </div>
+
+        <section class="mt-20 bg-gradient-to-br from-blue-900 to-indigo-950 rounded-3xl p-10 text-center border border-blue-800/50 shadow-2xl">
+            <h2 class="text-3xl font-black text-white mb-6">搵樓Call我</h2>
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <a href="tel:+85254093210" class="bg-white text-blue-900 px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2">📞 5409 3210</a>
+                <a href="https://wa.me/85298765432" class="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2">💬 WhatsApp</a>
+            </div>
+            <p class="mt-6 text-blue-300/60 text-sm">微信號：YourAgentID</p>
+        </section>
     </main>
 </div>
 
